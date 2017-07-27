@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #heroList{
+            width: 240px;
+            height: 150px;
+            /*border:1px solid red;*/
+        }
+    </style>
+</head>
+<body>
+    <div id="myApp">
+        {{msg}}
+        <h3 v-if="isShow">标题</h3>
+    </div>
+    <div id="myApp2" v-bind:title="msg">{{msg}}</div>
+    <div id="heroList">
+        <ul>
+            <hero-item v-for="hero in heroes"
+                       v-bind:hero="hero"
+                       v-on:zan="zan($event)"></hero-item>
+        </ul>
+        <div>
+            <input type="text" v-model="newHero.name">
+            <button v-on:click="add">新增英雄</button>
+        </div>
+    </div>
+<div id="myApp4">
+    <style>
+        .router-link-active{
+            background-color:red;
+        }
+    </style>
+    <router-link to="/Foo">Foo</router-link>
+    <router-link to="/Bar">Bar</router-link>
+    <router-view></router-view>
+</div>
+</body>
+<script src="node_modules/vue/dist/vue.min.js"></script>
+<script src="node_modules/vue-router/dist/vue-router.min.js"></script>
+<script src="node_modules/axios/dist/axios.min.js"></script>
+<script>
+    <!--创建vue的实例-->
+    var myApp = new Vue({
+        el:'#myApp', //设置vue的作用域
+        data:{      //设置数据模型
+            msg:'hello vue',
+            isShow:false
+        }
+    });
+    setTimeout(function(){
+        myApp.isShow = true;
+    },2000)
+    var myApp2 = new Vue({
+        el:'#myApp2', //设置vue的作用域
+        data:{      //设置数据模型
+            msg:'hello vue'
+        }
+    });
+//    在组件被使用之前实例化
+    Vue.component('hero-item',{
+        template:'<li v-on:click="showDetail(hero)">{{hero.name}} <span>{{hero.zan}}</span></li>',
+        props:['hero'],
+        methods:{
+            showDetail:function (hero) {
+                this.hero.zan++;
+//                alert(hero.name);
+                this.$emit('zan',{hero:hero});
+            }
+        }
+    })
+    var myApp3= new Vue({
+        el:'#heroList', //设置vue的作用域
+        data:{      //设置数据模型
+            heroes:[],
+            newHero:{}
+        },
+        methods:{
+            add:function(){ //this指的是当前vue实例
+                var h = {};
+                h.name = this.newHero.name;
+                h.zan = 0;
+                this.heroes.push(h);
+            },
+            zan:function(event){
+//                http请求
+                console.log(event);
+                alert(event.hero.name+'目前的赞数是:'+event.hero.zan)
+            }
+        }
+    });
+//    发送请求
+    axios.get('data.json')
+        .then(function (response) {
+        console.log(response);
+            myApp3.heroes = response.data;
+        })
+        .catch(function (err) {
+            console.log(err)
+        })
+//        定义路由
+    const Foo = {template:'<div>Foo<router-link to="/Bar/1">to Bar</router-link></div>'};
+    const Bar = {template:'<div>Bar id:{{$route.params.id}} aaa:{{$route.query.aaa}}</div>'};
+    const routes = [
+        {
+            path:'/foo',
+            component:Foo
+        },
+        {
+            path:'/bar',
+            component:Bar
+        }
+    ]
+//    创建路由实例
+    const  router = new VueRouter({routes:routes});
+//    创建Vue实例并挂载路由器实例
+    const  app = new Vue({
+        el:'#myApp4',
+        router:router
+    })
+</script>
+</html>
